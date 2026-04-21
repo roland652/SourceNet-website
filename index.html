@@ -571,159 +571,197 @@ nav{background:#FFFFFF;padding:0 1.25rem;display:flex;align-items:center;justify
 </div>
 
 <script>
-// ── REPLACE THIS WITH YOUR WEB3FORMS KEY FROM web3forms.com ──
 const W3F_KEY = 'YOUR_WEB3FORMS_KEY';
 
-function showPage(id){
+function showPage(id) {
   closeModal();
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  ['home','careers','request','blog','contact'].forEach(k=>{
-    const n=document.getElementById('nav-'+k);if(n)n.classList.remove('active');
-    const m=document.getElementById('mn-'+k);if(m)m.classList.remove('active');
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  ['home','careers','request','blog','contact'].forEach(function(k) {
+    var n = document.getElementById('nav-' + k); if (n) n.classList.remove('active');
+    var m = document.getElementById('mn-' + k); if (m) m.classList.remove('active');
   });
-  document.getElementById('page-'+id).classList.add('active');
-  const ni=document.getElementById('nav-'+id);if(ni)ni.classList.add('active');
-  const mi=document.getElementById('mn-'+id);if(mi)mi.classList.add('active');
+  document.getElementById('page-' + id).classList.add('active');
+  var ni = document.getElementById('nav-' + id); if (ni) ni.classList.add('active');
+  var mi = document.getElementById('mn-' + id); if (mi) mi.classList.add('active');
   closeMenuOnly();
-  window.scrollTo(0,0);
+  window.scrollTo(0, 0);
 }
-function toggleMenu(){document.getElementById('mobile-menu').classList.toggle('open');document.getElementById('hamburger').classList.toggle('open');}
-function closeMenuOnly(){document.getElementById('mobile-menu').classList.remove('open');document.getElementById('hamburger').classList.remove('open');}
-function openModal(role){
-  document.getElementById('modal-role-name').textContent=role;
-  document.getElementById('modal-form-content').style.display='block';
-  document.getElementById('modal-success-msg').style.display='none';
-  document.getElementById('app-error').style.display='none';
-  ['m-fname','m-lname','m-email','m-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('upload-label').textContent='Tap to upload your resume';
+
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+
+function closeMenuOnly() {
+  document.getElementById('mobile-menu').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+}
+
+function openModal(role) {
+  document.getElementById('modal-role-name').textContent = role;
+  document.getElementById('modal-form-content').style.display = 'block';
+  document.getElementById('modal-success-msg').style.display = 'none';
+  document.getElementById('app-error').style.display = 'none';
+  ['m-fname','m-lname','m-email','m-phone'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('upload-label').textContent = 'Tap to upload your resume';
   document.getElementById('modal-overlay').classList.add('open');
   closeMenuOnly();
-  document.body.style.overflow='hidden';
+  document.body.style.overflow = 'hidden';
 }
-function closeModal(){document.getElementById('modal-overlay').classList.remove('open');document.body.style.overflow='';}
-function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
-function fileChosen(input){if(input.files&&input.files[0])document.getElementById('upload-label').textContent=input.files[0].name;}
 
-async function w3fSubmit(payload){
-  const res = await fetch('https://api.web3forms.com/submit',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Accept':'application/json'},
-    body: JSON.stringify({access_key: W3F_KEY, ...payload})
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function fileChosen(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('upload-label').textContent = input.files[0].name;
+  }
+}
+
+function w3fSubmit(payload) {
+  var body = Object.assign({ access_key: W3F_KEY }, payload);
+  return fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); });
+}
+
+function submitApp() {
+  var fname = document.getElementById('m-fname').value.trim();
+  var lname = document.getElementById('m-lname').value.trim();
+  var email = document.getElementById('m-email').value.trim();
+  var phone = document.getElementById('m-phone').value.trim();
+  var role  = document.getElementById('modal-role-name').textContent;
+  if (!fname || !email) { alert('Please enter your first name and email.'); return; }
+  var btn = document.getElementById('app-submit-btn');
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  document.getElementById('app-error').style.display = 'none';
+  w3fSubmit({
+    subject: 'New Application - ' + role,
+    from_name: fname + ' ' + lname,
+    email: email,
+    replyto: email,
+    cc: 'info@sourcenetpartners.com',
+    message: 'New job application received.\n\nPosition: ' + role + '\nName: ' + fname + ' ' + lname + '\nEmail: ' + email + '\nPhone: ' + (phone || 'Not provided')
+  }).then(function(data) {
+    if (data.success) {
+      document.getElementById('success-fname').textContent = fname;
+      document.getElementById('modal-form-content').style.display = 'none';
+      document.getElementById('modal-success-msg').style.display = 'block';
+      setTimeout(closeModal, 3500);
+    } else {
+      document.getElementById('app-error').style.display = 'block';
+    }
+  }).catch(function() {
+    document.getElementById('app-error').style.display = 'block';
+  }).finally(function() {
+    btn.textContent = 'Submit Application'; btn.disabled = false;
   });
-  return res.json();
 }
 
-async function submitApp(){
-  const fname=document.getElementById('m-fname').value.trim();
-  const lname=document.getElementById('m-lname').value.trim();
-  const email=document.getElementById('m-email').value.trim();
-  const phone=document.getElementById('m-phone').value.trim();
-  const role=document.getElementById('modal-role-name').textContent;
-  if(!fname||!email){alert('Please enter your first name and email.');return;}
-  const btn=document.getElementById('app-submit-btn');
-  btn.textContent='Sending...';btn.disabled=true;
-  document.getElementById('app-error').style.display='none';
-  try{
-    const data=await w3fSubmit({
-      subject:,
-      from_name:,
-      email,
-      replyto:email,
-      cc:'info@sourcenetpartners.com',
-      message:
-    });
-    if(data.success){
-      document.getElementById('success-fname').textContent=fname;
-      document.getElementById('modal-form-content').style.display='none';
-      document.getElementById('modal-success-msg').style.display='block';
-      setTimeout(closeModal,3500);
-    } else {document.getElementById('app-error').style.display='block';}
-  } catch(e){document.getElementById('app-error').style.display='block';}
-  btn.textContent='Submit Application';btn.disabled=false;
+function submitReq() {
+  var district  = document.getElementById('req-district').value.trim();
+  var contact   = document.getElementById('req-contact').value.trim();
+  var email     = document.getElementById('req-email').value.trim();
+  var phone     = document.getElementById('req-phone').value.trim();
+  var disc      = document.getElementById('req-discipline').value;
+  var type      = document.getElementById('req-type').value;
+  var date      = document.getElementById('req-date').value;
+  var positions = document.getElementById('req-positions').value;
+  var details   = document.getElementById('req-details').value.trim();
+  if (!contact || !email) { alert('Please enter your name and email.'); return; }
+  var btn = document.getElementById('req-submit-btn');
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  document.getElementById('rerror').style.display = 'none';
+  w3fSubmit({
+    subject: 'New Staffing Request - ' + (disc || 'General'),
+    from_name: contact,
+    email: email,
+    replyto: email,
+    cc: 'info@sourcenetpartners.com',
+    message: 'New staffing request.\n\nDistrict: ' + (district || 'Not provided') + '\nContact: ' + contact + '\nEmail: ' + email + '\nPhone: ' + (phone || 'Not provided') + '\nDiscipline: ' + (disc || 'Not specified') + '\nAssignment Type: ' + (type || 'Not specified') + '\nStart Date: ' + (date || 'Not specified') + '\nPositions: ' + (positions || '1') + '\nDetails: ' + (details || 'None')
+  }).then(function(data) {
+    if (data.success) {
+      document.getElementById('rsuccess').style.display = 'block';
+      setTimeout(function() { document.getElementById('rsuccess').style.display = 'none'; }, 6000);
+    } else {
+      document.getElementById('rerror').style.display = 'block';
+    }
+  }).catch(function() {
+    document.getElementById('rerror').style.display = 'block';
+  }).finally(function() {
+    btn.textContent = 'Submit Request'; btn.disabled = false;
+  });
 }
 
-async function submitReq(){
-  const district=document.getElementById('req-district').value.trim();
-  const contact=document.getElementById('req-contact').value.trim();
-  const email=document.getElementById('req-email').value.trim();
-  const phone=document.getElementById('req-phone').value.trim();
-  const disc=document.getElementById('req-discipline').value;
-  const type=document.getElementById('req-type').value;
-  const date=document.getElementById('req-date').value;
-  const positions=document.getElementById('req-positions').value;
-  const details=document.getElementById('req-details').value.trim();
-  if(!contact||!email){alert('Please enter your name and email.');return;}
-  const btn=document.getElementById('req-submit-btn');
-  btn.textContent='Sending...';btn.disabled=true;
-  document.getElementById('rerror').style.display='none';
-  try{
-    const data=await w3fSubmit({
-      subject:,
-      from_name:contact,
-      email,
-      replyto:email,
-      cc:'info@sourcenetpartners.com',
-      message:
-    });
-    if(data.success){
-      document.getElementById('rsuccess').style.display='block';
-      setTimeout(()=>document.getElementById('rsuccess').style.display='none',6000);
-    } else {document.getElementById('rerror').style.display='block';}
-  } catch(e){document.getElementById('rerror').style.display='block';}
-  btn.textContent='Submit Request';btn.disabled=false;
+function submitCareer() {
+  var name  = document.getElementById('cname').value.trim();
+  var email = document.getElementById('cemail').value.trim();
+  if (!name || !email) { alert('Please enter your name and email.'); return; }
+  var btn = document.getElementById('notify-btn');
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  document.getElementById('cerror').style.display = 'none';
+  w3fSubmit({
+    subject: 'New Candidate Inquiry - Notify Me',
+    from_name: name,
+    email: email,
+    replyto: email,
+    cc: 'info@sourcenetpartners.com',
+    message: 'Notify-me inquiry.\n\nName: ' + name + '\nEmail: ' + email
+  }).then(function(data) {
+    if (data.success) {
+      document.getElementById('csuccess').style.display = 'block';
+      setTimeout(function() { document.getElementById('csuccess').style.display = 'none'; }, 5000);
+    } else {
+      document.getElementById('cerror').style.display = 'block';
+    }
+  }).catch(function() {
+    document.getElementById('cerror').style.display = 'block';
+  }).finally(function() {
+    btn.textContent = 'Notify Me'; btn.disabled = false;
+  });
 }
 
-async function submitCareer(){
-  const name=document.getElementById('cname').value.trim();
-  const email=document.getElementById('cemail').value.trim();
-  if(!name||!email){alert('Please enter your name and email.');return;}
-  const btn=document.getElementById('notify-btn');
-  btn.textContent='Sending...';btn.disabled=true;
-  document.getElementById('cerror').style.display='none';
-  try{
-    const data=await w3fSubmit({
-      subject:'New Candidate Inquiry — Notify Me',
-      from_name:name,
-      email,
-      replyto:email,
-      cc:'info@sourcenetpartners.com',
-      message:
-    });
-    if(data.success){
-      document.getElementById('csuccess').style.display='block';
-      setTimeout(()=>document.getElementById('csuccess').style.display='none',5000);
-    } else {document.getElementById('cerror').style.display='block';}
-  } catch(e){document.getElementById('cerror').style.display='block';}
-  btn.textContent='Notify Me';btn.disabled=false;
-}
-
-async function submitContact(){
-  const name=document.getElementById('ct-name').value.trim();
-  const email=document.getElementById('ct-email').value.trim();
-  const phone=document.getElementById('ct-phone').value.trim();
-  const type=document.getElementById('ct-type').value;
-  const message=document.getElementById('ct-message').value.trim();
-  if(!name||!email||!message){alert('Please fill in your name, email, and message.');return;}
-  const btn=document.getElementById('ct-submit-btn');
-  btn.textContent='Sending...';btn.disabled=true;
-  document.getElementById('cterror').style.display='none';
-  try{
-    const data=await w3fSubmit({
-      subject:,
-      from_name:name,
-      email,
-      replyto:email,
-      cc:'info@sourcenetpartners.com',
-      message:
-    });
-    if(data.success){
-      document.getElementById('ctsuccess').style.display='block';
-      ['ct-name','ct-email','ct-phone','ct-message'].forEach(id=>document.getElementById(id).value='');
-      document.getElementById('ct-type').value='';
-      setTimeout(()=>document.getElementById('ctsuccess').style.display='none',6000);
-    } else {document.getElementById('cterror').style.display='block';}
-  } catch(e){document.getElementById('cterror').style.display='block';}
-  btn.textContent='Send Message';btn.disabled=false;
+function submitContact() {
+  var name    = document.getElementById('ct-name').value.trim();
+  var email   = document.getElementById('ct-email').value.trim();
+  var phone   = document.getElementById('ct-phone').value.trim();
+  var type    = document.getElementById('ct-type').value;
+  var message = document.getElementById('ct-message').value.trim();
+  if (!name || !email || !message) { alert('Please fill in your name, email, and message.'); return; }
+  var btn = document.getElementById('ct-submit-btn');
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  document.getElementById('cterror').style.display = 'none';
+  w3fSubmit({
+    subject: 'Contact Form - ' + (type || 'General Inquiry'),
+    from_name: name,
+    email: email,
+    replyto: email,
+    cc: 'info@sourcenetpartners.com',
+    message: 'Contact form submission.\n\nName: ' + name + '\nEmail: ' + email + '\nPhone: ' + (phone || 'Not provided') + '\nType: ' + (type || 'Not specified') + '\n\nMessage:\n' + message
+  }).then(function(data) {
+    if (data.success) {
+      document.getElementById('ctsuccess').style.display = 'block';
+      ['ct-name','ct-email','ct-phone','ct-message'].forEach(function(id) { document.getElementById(id).value = ''; });
+      document.getElementById('ct-type').value = '';
+      setTimeout(function() { document.getElementById('ctsuccess').style.display = 'none'; }, 6000);
+    } else {
+      document.getElementById('cterror').style.display = 'block';
+    }
+  }).catch(function() {
+    document.getElementById('cterror').style.display = 'block';
+  }).finally(function() {
+    btn.textContent = 'Send Message'; btn.disabled = false;
+  });
 }
 </script>
 </body>
